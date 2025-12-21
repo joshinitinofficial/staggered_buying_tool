@@ -139,6 +139,7 @@ if st.button("🚀 Calculate"):
         styled_df = df.style\
             .hide(axis="index")\
             .format({
+                "Buy Price": "₹{:,.2f}",
                 "Capital Used (₹)": "₹{:,.0f}"
             }) \
             .applymap(lambda x: "color: green; font-weight: bold;", subset=["Buy Price"])\
