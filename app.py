@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 # ---------------- CORE LOGIC ---------------- #
 
@@ -72,7 +73,6 @@ call_buy_price = st.number_input("Call BUY Premium", value=10.0)
 st.subheader("📌 Execution Plan")
 steps = st.slider("Total Buy Steps", min_value=2, max_value=10, value=5)
 initial_leg_percent = st.slider("Initial Leg %", min_value=0, max_value=100, value=40)
-
 coverage_ratio = st.slider("Required MTM Coverage (%)", 50, 100, 70) / 100
 
 st.divider()
@@ -101,14 +101,24 @@ if st.button("🚀 Calculate"):
             coverage_ratio
         )
 
+        # -------- METRICS --------
         st.subheader("📈 Option & Capital Metrics")
-        st.write(f"**Max Option Loss:** ₹{round(option_loss,2)}")
-        st.write(f"**Breakeven Price:** {round(breakeven,2)}")
-        st.write(f"**Capital (Lump Sum):** ₹{round(base_capital,2)}")
-        st.write(f"**Capital (Staggered):** ₹{round(staggered_capital,2)}")
 
-        st.subheader("🧮 Staggered Buy Plan")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Max Option Loss", f"₹{round(option_loss,2)}")
+        c2.metric("Breakeven Price", round(breakeven,2))
+        c3.metric("Distance to BE (%)", round(distance_percent*100,2))
 
+        c4, c5 = st.columns(2)
+        c4.metric("Capital (Lump Sum)", f"₹{round(base_capital,2)}")
+        c5.metric("Capital (Staggered)", f"₹{round(staggered_capital,2)}")
+
+        st.divider()
+
+        # -------- STAGGERED TABLE --------
+        st.subheader("📋 Staggered Buy Plan")
+
+        rows = []
         first_leg = staggered_capital * (initial_leg_percent / 100)
         remaining = staggered_capital - first_leg
         step_gap = (call_sell_strike - spot_price) / (steps - 1)
@@ -117,16 +127,27 @@ if st.button("🚀 Calculate"):
             price = spot_price + i * step_gap
             cap = first_leg if i == 0 else remaining / (steps - 1)
             qty = int(round(cap / price))
+            capital_used = qty * price
 
-            st.write(
-                f"Step {i+1} → Price: {round(price,2)}, "
-                f"Qty: {qty}, Capital: ₹{round(qty * price,2)}"
-            )
+            rows.append({
+                "Step": i + 1,
+                "Buy Price": round(price, 2),
+                "Quantity": qty,
+                "Capital Used (₹)": round(capital_used, 2)
+            })
 
+        df = pd.DataFrame(rows)
+        st.dataframe(df, use_container_width=True)
+
+        st.divider()
+
+        # -------- FINAL VALIDATION --------
         st.subheader("✅ Final Validation @ Breakeven")
-        st.write(f"**Average Buy Price:** ₹{round(avg_price,2)}")
-        st.write(f"**Total Quantity:** {total_qty}")
-        st.write(f"**Equity MTM @ BE:** ₹{round(profit_at_be,2)}")
+
+        f1, f2, f3 = st.columns(3)
+        f1.metric("Avg Buy Price", f"₹{round(avg_price,2)}")
+        f2.metric("Total Quantity", total_qty)
+        f3.metric("Equity MTM @ BE", f"₹{round(profit_at_be,2)}")
 
         if profit_at_be >= coverage_ratio * option_loss:
             st.success("MTM Positive at Breakeven ✔️")
