@@ -14,10 +14,10 @@ def required_staggered_capital(
     coverage_ratio=0.70,
     max_iter=300
 ):
-    capital = base_capital
+    capital = int(round(base_capital))
 
     for _ in range(max_iter):
-        first_leg = capital * (initial_leg_percent / 100)
+        first_leg = int(round(capital * (initial_leg_percent / 100)))
         remaining = capital - first_leg
 
         step_gap = (final_buy_price - spot_price) / (steps - 1)
@@ -27,16 +27,16 @@ def required_staggered_capital(
 
         for i in range(steps):
             price = spot_price + i * step_gap
-            cap = first_leg if i == 0 else remaining / (steps - 1)
+            cap = first_leg if i == 0 else remaining // (steps - 1)
 
             qty = int(round(cap / price))
-            actual_capital = qty * price
+            actual_capital = int(qty * price)
 
             total_qty += qty
             total_cost += actual_capital
 
         if total_qty == 0:
-            capital *= 1.05
+            capital = int(capital * 1.05)
             continue
 
         avg_price = total_cost / total_qty
@@ -45,7 +45,7 @@ def required_staggered_capital(
         if equity_profit >= coverage_ratio * option_loss:
             return capital, equity_profit, avg_price, total_qty
 
-        capital *= 1.02
+        capital = int(capital * 1.02)
 
     return capital, equity_profit, avg_price, total_qty
 
@@ -80,7 +80,7 @@ st.divider()
 if st.button("🚀 Calculate"):
     net_credit = call_sell_price - call_buy_price
     spread_width = abs(call_sell_strike - call_buy_strike)
-    option_loss = (spread_width - net_credit) * lot_size
+    option_loss = int((spread_width - net_credit) * lot_size)
 
     breakeven = call_sell_strike + net_credit
     distance_percent = (breakeven - spot_price) / spot_price
@@ -88,7 +88,7 @@ if st.button("🚀 Calculate"):
     if distance_percent <= 0:
         st.error("Breakeven must be above spot price")
     else:
-        base_capital = option_loss / distance_percent
+        base_capital = int(option_loss / distance_percent)
 
         staggered_capital, profit_at_be, avg_price, total_qty = required_staggered_capital(
             base_capital,
@@ -105,39 +105,49 @@ if st.button("🚀 Calculate"):
         st.subheader("📈 Option & Capital Metrics")
 
         c1, c2, c3 = st.columns(3)
-        c1.metric("Max Option Loss", f"₹{round(option_loss,2)}")
+        c1.metric("Max Option Loss", f"₹{option_loss}")
         c2.metric("Breakeven Price", round(breakeven,2))
         c3.metric("Distance to BE (%)", round(distance_percent*100,2))
 
         c4, c5 = st.columns(2)
-        c4.metric("Capital (Lump Sum)", f"₹{round(base_capital,2)}")
-        c5.metric("Capital (Staggered)", f"₹{round(staggered_capital,2)}")
+        c4.metric("Capital (Lump Sum)", f"₹{base_capital}")
+        c5.metric("Capital (Staggered)", f"₹{staggered_capital}")
 
         st.divider()
 
-        # -------- STAGGERED TABLE --------
-        st.subheader("📋 Staggered Buy Plan")
+        # -------- STAGGERED BUY PLAN --------
+        st.markdown("## 📋 **STAGGERED BUY PLAN**")
 
         rows = []
-        first_leg = staggered_capital * (initial_leg_percent / 100)
+        first_leg = int(staggered_capital * (initial_leg_percent / 100))
         remaining = staggered_capital - first_leg
         step_gap = (call_sell_strike - spot_price) / (steps - 1)
 
         for i in range(steps):
             price = spot_price + i * step_gap
-            cap = first_leg if i == 0 else remaining / (steps - 1)
+            cap = first_leg if i == 0 else remaining // (steps - 1)
             qty = int(round(cap / price))
-            capital_used = qty * price
+            capital_used = int(qty * price)
 
             rows.append({
                 "Step": i + 1,
                 "Buy Price": round(price, 2),
                 "Quantity": qty,
-                "Capital Used (₹)": round(capital_used, 2)
+                "Capital Used (₹)": capital_used
             })
 
         df = pd.DataFrame(rows)
-        st.dataframe(df, use_container_width=True)
+
+        styled_df = df.style\
+            .hide(axis="index")\
+            .format({
+                "Buy Price": "₹{:.2f}",
+                "Capital Used (₹)": "₹{:,.0f}"
+            })\
+            .applymap(lambda x: "color: green; font-weight: bold;", subset=["Buy Price"])\
+            .applymap(lambda x: "color: #003366; font-weight: bold;", subset=["Capital Used (₹)"])
+
+        st.dataframe(styled_df, use_container_width=True)
 
         st.divider()
 
@@ -147,7 +157,7 @@ if st.button("🚀 Calculate"):
         f1, f2, f3 = st.columns(3)
         f1.metric("Avg Buy Price", f"₹{round(avg_price,2)}")
         f2.metric("Total Quantity", total_qty)
-        f3.metric("Equity MTM @ BE", f"₹{round(profit_at_be,2)}")
+        f3.metric("Equity MTM @ BE", f"₹{int(profit_at_be)}")
 
         if profit_at_be >= coverage_ratio * option_loss:
             st.success("MTM Positive at Breakeven ✔️")
