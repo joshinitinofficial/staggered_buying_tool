@@ -64,7 +64,7 @@ def required_staggered_capital(
 st.set_page_config(page_title="Staggered Buying Tool", layout="centered")
 
 st.title("📊 Staggered Buying Calculator")
-st.caption("Hedged staggered buying with covered-call awareness")
+st.caption("Calculates Amount of Equity to be Purchased in a Covered Call Spread. Created by Nitin Joshi | Being System Trader")
 
 st.divider()
 
