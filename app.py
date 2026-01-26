@@ -81,9 +81,6 @@ st.markdown("""
     flex-wrap: wrap;
     gap: 15px;
 ">
-<b>⚠️ Disclaimer:</b> This is <b>NOT a recommendation</b>. This tool only calculates results based on your inputs.  
-I am <b>NOT SEBI Registered</b>. Please do your own research before taking any trades.
-</div>
     <div style="flex: 1; min-width: 300px;">
         <p style="margin:0; color: #f8fafc; font-size: 15px; line-height: 1.5;">
             👋 <b>Need Personal Guidance?</b><br>
