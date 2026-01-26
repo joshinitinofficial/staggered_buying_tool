@@ -202,6 +202,21 @@ if st.button("🚀 Calculate"):
         )
 
         st.dataframe(styled_df, use_container_width=True)
+        st.markdown("""
+        <div style="
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #111827;
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            font-size: 14px;
+            line-height: 1.6;
+        ">
+        <b>⚠️ Disclaimer:</b> This is <b>NOT a recommendation</b>. This tool only calculates results based on your inputs.  
+        I am <b>NOT SEBI Registered</b>. Please do your own research before taking any trades.
+        </div>
+        """, unsafe_allow_html=True)
 
         st.divider()
 
