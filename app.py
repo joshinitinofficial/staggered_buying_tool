@@ -183,8 +183,8 @@ if st.button("🚀 Calculate"):
                 "Buy Price": "₹{:,.2f}",
                 "Capital Used (₹)": "₹{:,.0f}"
             })
-            .applymap(lambda x: "color: green; font-weight: bold;", subset=["Buy Price"])
-            .applymap(lambda x: "color: #003366; font-weight: bold;", subset=["Capital Used (₹)"])
+            .map(lambda x: "color: green; font-weight: bold;", subset=["Buy Price"])
+            .map(lambda x: "color: #003366; font-weight: bold;", subset=["Capital Used (₹)"])
             .set_properties(**{
                 "font-size": "18px",
                 "text-align": "center"
